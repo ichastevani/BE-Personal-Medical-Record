@@ -1,0 +1,19 @@
+npm install -g ganache
+
+# Node 1
+cd /d "D:\.proyek\blockchain\medical\helper\ganache"
+ganache --host 0.0.0.0 --defaultBalanceEther 10000000 --port 8545 --networkId 1234 --db ./node1 --mnemonic "menu rally globe treat verify broom scene thunder abuse target oak exile"
+
+# Node 2
+cd /d "D:\.proyek\blockchain\medical\helper\ganache"
+ganache --host 0.0.0.0 --defaultBalanceEther 10000000 --port 8546 --networkId 1234 --db ./node2 --mnemonic "chimney coast monkey draw giraffe surge crisp enlist whale call tide magnet"
+
+# Node 3
+cd /d "D:\.proyek\blockchain\medical\helper\ganache"
+ganache --host 0.0.0.0 --defaultBalanceEther 10000000 --port 8547 --networkId 1234 --db ./node3 --mnemonic "hollow swift nurse potato bullet proof inhale update shrimp shield picnic rare"
+
+
+
+ganache --port 8545 --chain.networkId 1999 --chain.chainId 1999 --accounts 10  --defaultBalanceEther 10000000 --db ./node --mnemonic "chimney coast monkey draw giraffe surge crisp enlist whale call tide magnet"
+
+

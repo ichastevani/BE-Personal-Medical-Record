@@ -1,0 +1,22 @@
+MEDICAL-10-06-2025/  
+├── contracts/                  # Smart Contract (Solidity)  
+│   ├── StorageHealthRecords.sol  # Kontrak untuk menyimpan rekam medis  
+│   └── VerificationHealthRecords.sol # Kontrak untuk verifikasi data  
+├── src/                        # Kode backend utama  
+│   ├── controllers/            # Logika bisnis (e.g., upload rekam medis)  
+│   ├── middleware/             # Validasi/Autentikasi (e.g., cek akses dokter)  
+│   ├── models/                 # Skema database (jika pakai database tradisional)  
+│   ├── routes/                 # Endpoint API (e.g., `/records/upload`)  
+│   ├── utils/                  # Fungsi bantu (e.g., enkripsi, error handler)  
+│   └── app.js                  # Inti aplikasi (setup Express, koneksi blockchain)  
+├── public/                     # File statis (jika ada)  
+│   ├── files/                  # File sementara (e.g., dokumen sebelum upload ke IPFS)  
+│   ├── img/                    # Gambar  
+│   └── tmp/                    # Penyimpanan sementara  
+├── test/                       # Unit test  
+├── helper/                     # Script tambahan (e.g., deploy kontrak)  
+├── .env                        # Variabel lingkungan (aktif)  
+├── env.hybrid.env              # Template untuk mode hybrid  
+├── env.private.env             # Template untuk mode private  
+├── env.public.env              # Template untuk mode public  
+└── db.sqlite                   # Database SQLite (jika digunakan)  

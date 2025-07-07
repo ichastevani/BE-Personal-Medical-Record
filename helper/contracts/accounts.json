@@ -1,0 +1,86 @@
+{
+  "doctors": [
+    {
+      "ethPrivateKey": "0x695a5426d87f526346c19715f052b9bc642d11f95553fb27b764576ed1a6a026",
+      "ethAddress": "0x738Be63F56bb616387e719DE65122F93A69f9F09",
+      "name": "Doctor 0",
+      "birthDate": "2025-03-21T01:17:58.747Z",
+      "homeAddress": "Indonesia",
+      "aesKey": "3bb5e744be10253ed4e02dde66cc960f33cb85ce4691657315847b1a6501a39e",
+      "passKey": "doctor",
+      "role": "Doctor"
+    },
+    {
+      "ethPrivateKey": "0x07ffa6e62b38904876c47c680152c39c06f85e187c272a5a294b110dff2d7e56",
+      "ethAddress": "0x04E3a9d95E96E60384801607334B9f5741313eCd",
+      "name": "Doctor 1",
+      "birthDate": "2025-03-21T01:17:58.978Z",
+      "homeAddress": "Indonesia",
+      "aesKey": "d579a613f6d2e2b82d26a08e99f9eb79e00be7c219816a53eebf0755990d496d",
+      "passKey": "doctor",
+      "role": "Doctor"
+    },
+    {
+      "ethPrivateKey": "0x461bfe1ac3d03fb18960e9c34b3709be8e84de3f3297b9fd9c9f7f9b226bd6c0",
+      "ethAddress": "0xbc30c5f5f283AbbcB9228e9843840B34D4181e40",
+      "name": "Doctor 2",
+      "birthDate": "2025-03-21T01:17:59.187Z",
+      "homeAddress": "Indonesia",
+      "aesKey": "893a2bb62c487ff9b48761f2b4ff134a9dd51f181f661672545f5327ad495310",
+      "passKey": "doctor",
+      "role": "Doctor"
+    },
+    {
+      "ethPrivateKey": "0x6491bd15e7fbc97042e42015348a64ce0acef659be0d60b2e1f318d2943fc101",
+      "ethAddress": "0xc363b1961756b96d95abFa16FA7230A194685dDA",
+      "name": "Doctor 3",
+      "birthDate": "2025-03-21T01:17:59.410Z",
+      "homeAddress": "Indonesia",
+      "aesKey": "af1f470110899039c910e7bdd82297dffb12aa08f2ce7e3b51bd7538c82a60d6",
+      "passKey": "doctor",
+      "role": "Doctor"
+    }
+  ],
+  "patients": [
+    {
+      "ethPrivateKey": "0x683a57e0bbda027fa34e468f33a64c673703f4c999d4f61ebe5d64ca6175bf3c",
+      "ethAddress": "0xBCa09F2E3862f9b8683D02FDC1970275DBDFe50D",
+      "name": "Patient 0",
+      "birthDate": "2025-03-21T01:17:59.579Z",
+      "homeAddress": "Indonesia",
+      "aesKey": "d0d582fa18d65d63fc9ac6bc1a83289c90a1fa470da8de271e53fa0614751558",
+      "passKey": "patient",
+      "role": "Patient"
+    },
+    {
+      "ethPrivateKey": "0x4367f32de32075fe8d8b2212cc204b3325d4fe9d16490e94b1f77998735cf7d4",
+      "ethAddress": "0xf07676b9C74c42E420626f4193f40FEA0970912e",
+      "name": "Patient 1",
+      "birthDate": "2025-03-21T01:17:59.749Z",
+      "homeAddress": "Indonesia",
+      "aesKey": "bf2d55bedd00ae1d7111aa765f4d83438c90e245ecf6787c70e4929690ca5b25",
+      "passKey": "patient",
+      "role": "Patient"
+    },
+    {
+      "ethPrivateKey": "0x3feff5e0e2412fe317620f928c3c21738023fec8bd545bb43fdba3c852641882",
+      "ethAddress": "0x0E1323D60Deb976903a409FfE72A48eF680a9591",
+      "name": "Patient 2",
+      "birthDate": "2025-03-21T01:17:59.915Z",
+      "homeAddress": "Indonesia",
+      "aesKey": "6553a5df079442605b24d4135e13a6205934427f2ca9ee7fab1eeb5844b1d8c9",
+      "passKey": "patient",
+      "role": "Patient"
+    },
+    {
+      "ethPrivateKey": "0x1e5af6ef242d375559170466737a5d85b429f69e28dfa3d47c4ae137191355af",
+      "ethAddress": "0x16662D0756cECdF476A0934933Ab9759dc2E226c",
+      "name": "Patient 3",
+      "birthDate": "2025-03-21T01:18:00.098Z",
+      "homeAddress": "Indonesia",
+      "aesKey": "c6ff5080ab8916b2130b8869185cfd7b0b53eec7b8a617700f6097dc9e33011c",
+      "passKey": "patient",
+      "role": "Patient"
+    }
+  ]
+}

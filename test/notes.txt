@@ -1,0 +1,8 @@
+# Private
+node test/privateBlockchainTest.js
+
+# Public
+node test/publicBlockchainTest.js
+
+# Hybrid
+node test/hybridBlockchainTest.js

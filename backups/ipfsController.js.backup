@@ -1,0 +1,111 @@
+const crypto = require("crypto");
+const fs = require("fs");
+const path = require("path");
+
+const catchAsync = require('../utils/catchAsync');
+const toolsUtil = require('../utils/toolsUtil');
+const AppError = require('../utils/appError');
+
+/**
+ * Fungsi: manambahkan data ke IPFS
+ */
+exports.post = catchAsync(async (req, res, next) => {
+    // Validasi data yang
+    if (!req.file) {
+        return next(new AppError('Data yang dikirim tidak valid.', 400))
+    }
+
+    const algorithm = process.env.AES_ALGORITHM;
+    const key = Buffer.from(process.env.AES_KEY, "hex"); // Kunci 256-bit
+    const iv = Buffer.from(process.env.AES_IV, "hex");  // IV 16-byte
+
+    // 1. Baca file dan konversi ke hex string
+    const fileHex = req.file.buffer.toString("hex");
+
+    // 2. Gabungkan metadata (nama & ekstensi) dengan hex file
+    const fileInfo = `${req.user.id}-${req.file.originalname}::${fileHex}`;
+
+    // 3. Enkripsi string hasil gabungan
+    const cipher = crypto.createCipheriv(algorithm, key, iv);
+    let encryptedHex = cipher.update(fileInfo, "utf8", "hex");
+    encryptedHex += cipher.final("hex");
+
+    const fileName = req.user.id + "-" + new Date();
+    const pathFile = `./backups/${fileName}.txt`;
+    fs.writeFileSync(pathFile, encryptedHex);
+
+
+    toolsUtil.success(res, 'Berhasil menambahkan data ipfs.', {
+        "encrypt": encryptedHex,
+    });
+});
+
+/**
+ * Fungsi: manambahkan data ke IPFS
+ */
+exports.postEn = catchAsync(async (req, res, next) => {
+    // Validasi data yang
+    if (!req.file) {
+        return next(new AppError('Data yang dikirim tidak valid.', 400))
+    }
+
+    const algorithm = process.env.AES_ALGORITHM;
+    const key = Buffer.from(process.env.AES_KEY, "hex"); // Kunci 256-bit
+    const iv = Buffer.from(process.env.AES_IV, "hex");  // IV 16-byte
+
+    // 1. Baca file dan konversi ke hex string
+    const fileHex = req.file.buffer.toString("hex");
+
+    // 2. Gabungkan metadata (nama & ekstensi) dengan hex file
+    const fileInfo = `${req.user.id}-${req.file.originalname}::${fileHex}`;
+
+    // 3. Enkripsi string hasil gabungan
+    const cipher = crypto.createCipheriv(algorithm, key, iv);
+    let encryptedHex = cipher.update(fileInfo, "utf8", "hex");
+    encryptedHex += cipher.final("hex");
+
+    fs.writeFileSync("./backups/test.txt", encryptedHex);
+
+
+    toolsUtil.success(res, 'Berhasil menambahkan data ipfs.', {
+        "encrypt": encryptedHex,
+    });
+});
+
+/**
+ * Fungsi: mengambil data ke IPFS
+ */
+exports.get = catchAsync(async (req, res, next) => {
+    const encryptedHex = fs.readFileSync("./backups/test.txt").toString();
+    const algorithm = process.env.AES_ALGORITHM;
+    const key = Buffer.from(process.env.AES_KEY, "hex"); // Kunci 256-bit
+    const iv = Buffer.from(process.env.AES_IV, "hex");  // IV 16-byte
+
+    // 1. Dekripsi AES ke string (mengandung metadata)
+    const decipher = crypto.createDecipheriv(algorithm, key, iv);
+    let decryptedString = decipher.update(encryptedHex, "hex", "utf8");
+    decryptedString += decipher.final("utf8");
+
+    // 2. Pisahkan metadata (nama & ekstensi) dari hex file
+    const [fileName, fileHex] = decryptedString.split("::");
+
+    if (!fileName || !fileHex) {
+        return next(new AppError("Format data terenkripsi tidak valid.", 400));
+    }
+
+    // 3. Konversi hex ke buffer
+    const fileBuffer = Buffer.from(fileHex, "hex");
+
+    // 4. Simpan & kirim file
+    const outputPath = path.join("./public/files/tmp", fileName);
+    fs.writeFileSync(outputPath, fileBuffer);
+
+    res.download(outputPath, fileName, (err) => {
+        if (err) return next(new AppError("Gagal mengunduh file.", 500));
+        fs.unlinkSync(outputPath); // Hapus setelah dikirim
+    });
+
+    // toolsUtil.success(res, 'Berhasil menambahkan data ipfs.', {
+    //     "encrypt": encryptedHex,
+    // });
+});

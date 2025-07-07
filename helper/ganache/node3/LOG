@@ -1,0 +1,12 @@
+2025/06/25-10:58:49.259 30f4 Recovering log #26
+2025/06/25-10:58:49.263 30f4 Level-0 table #28: started
+2025/06/25-10:58:49.278 30f4 Level-0 table #28: 264230 bytes OK
+2025/06/25-10:58:49.285 30f4 Delete type=0 #26
+2025/06/25-10:58:49.286 30f4 Delete type=3 #24
+2025/06/25-11:07:14.499 5cbc Compacting 2@0 + 1@1 files
+2025/06/25-11:07:14.524 5cbc Generated table #30@0: 2854 keys, 824508 bytes
+2025/06/25-11:07:14.524 5cbc Compacted 2@0 + 1@1 files => 824508 bytes
+2025/06/25-11:07:14.527 5cbc compacted to: files[ 0 1 0 0 0 0 0 ]
+2025/06/25-11:07:14.527 5cbc Delete type=2 #23
+2025/06/25-11:07:14.528 5cbc Delete type=2 #25
+2025/06/25-11:07:14.528 5cbc Delete type=2 #28

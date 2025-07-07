@@ -1,0 +1,30 @@
+# 0. Sync Database jika belum
+node helper/db/db_sync.js
+
+# 1. Setup Smart Contract
+# Lokasi Folder: contracts/
+# Lokasi Folder hasil Build: build/contracts/
+truffle compile
+
+# 2. Deploy Smart Contract
+
+// Storage Health Records
+node helper/contracts/createStorageBlockContract.js
+
+// Verification Health Records
+node helper/contracts/createVerificationBlockContract.js
+
+# 3. Ubah address untuk smart contract public dan private yang telah di deploy ke file .env
+
+
+# Referensi
+https://medium.com/@maria.magdalena.makeup/deploying-a-smart-contract-on-ganache-e7ca3077b685
+https://github.com/smartcontractkit/full-blockchain-solidity-course-js/discussions/6746
+openssl rand -hex 32
+
+
+// Infura Status
+https://status.infura.io/
+
+// issue
+https://github.com/MetaMask/metamask-extension/issues/13153

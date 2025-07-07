@@ -1,0 +1,160 @@
+const catchAsync = require('../utils/catchAsync');
+const toolsUtil = require('../utils/toolsUtil');
+const AppError = require('../utils/appError');
+const path = require('path');
+const fs = require('fs-extra');
+const solc = require('solc');
+const { Web3 } = require('web3');
+
+const ContractModel = require('../models/ContractModel');
+const UserModel = require('../models/UserModel');
+const UserContractModel = require('../models/UserContractModel');
+
+const web3 = new Web3(process.env.INFURA_URL || 'http://127.0.0.1:7545');
+
+/**
+ * Fungsi: membuat contract
+ */
+exports.post = catchAsync(async (req, res, next) => {
+    // Nama file kontrak
+    const fileName = "DataStorage";
+    const contractFileName = `${fileName}.sol`;
+    const contractPath = `./src/solidity/${contractFileName}`;
+
+    // Pastikan file kontrak ada
+    if (!fs.existsSync(contractPath)) {
+        return next(new AppError(`File kontrak ${contractFileName} tidak ditemukan.`, 404));
+    }
+
+    // Baca file kontrak Solidity
+    const source = fs.readFileSync(contractPath, 'utf8');
+
+    // Persiapkan input untuk kompilasi solc (menggunakan standar JSON input)
+    const input = {
+        language: 'Solidity',
+        sources: {
+            [contractFileName]: {
+                content: source,
+            },
+        },
+        settings: {
+            outputSelection: {
+                '*': {
+                    '*': ['abi', 'evm.bytecode'],
+                },
+            },
+        },
+    };
+
+    // Kompilasi kontrak
+    const output = JSON.parse(solc.compile(JSON.stringify(input)));
+
+    // Periksa apakah ada error saat kompilasi
+    if (output.errors) {
+        output.errors.forEach((err) => {
+            console.error(err.formattedMessage);
+        });
+
+        // Jika ada error fatal, hentikan proses
+        if (output.errors.some((err) => err.severity === 'error')) {
+            return next(new AppError('Gagal melakukan kompilasi kontrak. Periksa log error untuk detail lebih lanjut.', 400));
+        }
+    }
+
+    // Ambil data kontrak dari hasil kompilasi
+    const contractData = output.contracts[contractFileName][fileName];
+    if (!contractData) {
+        return next(new AppError('Kontrak tidak ditemukan dalam hasil kompilasi.', 404));
+    }
+
+    // Ambil bytecode dan ABI
+    const bytecode = contractData.evm.bytecode.object;
+    const abi = contractData.abi;
+
+    // Pastikan direktori penyimpanan ada
+    const contractJsonDir = './src/contracts';
+    if (!fs.existsSync(contractJsonDir)) {
+        fs.mkdirSync(contractJsonDir, { recursive: true });
+    }
+
+    // Simpan ABI dan bytecode ke dalam file JSON
+    const contractJsonPath = `${contractJsonDir}/${fileName}.json`;
+    const contractJsonData = {
+        name: fileName,
+        bytecode,
+        abi,
+    };
+
+    fs.writeFileSync(contractJsonPath, JSON.stringify(contractJsonData, null, 4));
+
+    // Berikan respons sukses
+    toolsUtil.success(res, 'Berhasil membuat data kontrak.');
+});
+
+/**
+ * Fungsi: membuat contract user
+ */
+exports.postUser = catchAsync(async (req, res, next) => {
+    // Inisialisasi Web3 ambil account
+    const account = web3.eth.accounts.privateKeyToAccount(req.user.ETH_STORAGE_KEY);
+    web3.eth.accounts.wallet.add(account);
+    web3.eth.defaultAccount = account.address;
+
+    // const privateKey = "0xf82006395aa2e85542f831f49b00b7eb5872150fddef3813e1e6f3607755c791";
+    // const account = web3.eth.accounts.privateKeyToAccount(privateKey);
+    // web3.eth.accounts.wallet.add(account);
+    // web3.eth.defaultAccount = account.address;
+
+    const dataUserContract = await UserContractModel.findOne({
+        where: {
+            user_id: req.user.id,
+            is_full: false,
+        }
+    });
+    if(dataUserContract){
+        return next(new AppError('Data kontrak telah tersedia.', 409))
+    }
+
+    async function deployContract() {
+
+        const source = JSON.parse(fs.readFileSync(`./src/contracts/${process.env.CONTRACT_NAME}.json`, 'utf8'));
+        const abi = source.abi;
+        const bytecode = source.bytecode;
+
+        try {
+            const contractInstance = await new web3.eth.Contract(abi)
+                .deploy({ data: bytecode })
+                .send({
+                    from: account.address,
+                    gas: 5000000,
+                    gasPrice: web3.utils.toWei('20', 'gwei')
+                });
+
+            return {
+                "status": true,
+                "data": contractInstance.options.address
+            };
+        } catch (error) {
+            console.error("Error deploying contract:", error);
+            return {
+                "status": false,
+                "data": error.toString()
+            }
+        }
+    }
+
+    const result = await deployContract();
+    if(! result.status){
+        return next(new AppError("Error deploying contract: " + result.data, 400))
+    }
+
+    const newUserContract = await UserContractModel.create({
+        user_id: req.user.id,
+        contract_address: result.data,
+        is_full: false,
+    })
+
+    toolsUtil.success(res, 'Berhasil membuat data kontrak pengguna.', {
+        "user_contract_id": newUserContract.id
+    });
+});

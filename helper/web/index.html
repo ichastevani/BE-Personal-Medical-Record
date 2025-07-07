@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MetaMask Transaction</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+</head>
+
+<body class="container mt-5">
+
+    <h2 class="text-center">Healt Records with MetaMask</h2>
+
+    <div class="row">
+        <div class="col-12 mb-3">
+            <div class="card">
+                <button id="connectWallet" class="btn btn-primary">Connect MetaMask</button>
+                <p class="mt-2 text-center"><strong>Address:</strong> <span id="walletAddress">Not connected</span></p>
+            </div>
+        </div>
+
+        <div class="col-6 mb-3">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Send Balance</h3>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="form-label">Recipient Address</label>
+                        <input type="text" id="recipient" class="form-control mb-2" placeholder="Recipient Address">
+                    </div>
+                    <div class="mb-3">
+                        <label for="form-label">Balances</label>
+                        <input type="number" id="balances" class="form-control mb-2" placeholder="Balances" value="1">
+                    </div>
+
+                    <button id="sendBalances" class="btn btn-outline-primary w-100">Send Transaction</button>
+                    <p class="mt-3"><strong>Transaction Hash:</strong> <span id="txHash"></span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 mb-3">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Send Transaction Data</h3>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <label for="form-label">Transaction Data</label>
+                        <textarea id="transactionData" rows="4" class="form-control"></textarea>
+                    </div>
+
+                    <button id="sendTransactionData" class="btn btn-outline-primary w-100">Send Transaction</button>
+                    <p class="mt-3"><strong>Transaction Data Hash:</strong> <span id="txDataHash"></span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 mb-3">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Build Smart Contracts</h3>
+                </div>
+                <div class="card-body">
+                    <button id="deployContract" class="btn btn-outline-primary w-100">
+                        Build Contracts
+                    </button>
+                    <p class="mt-3"><strong>Transaction Hash:</strong> <span id="txHashBC"></span></p>
+                    <p class="mt-3"><strong>Contract Address:</strong> <span id="contractAddress"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let signer, provider;
+        // Sesuaikan dengan ETH_VERIFICATION_CONTRACT_ADDRESS yang terdapat di .env
+        const publicContractAddress = "0x4F03BC8e3eB6b5B53c89Fb6d7f50605bf22bfffd";
+
+        async function connectMetaMask() {
+            if (window.ethereum) {
+                try {
+                    provider = new ethers.providers.Web3Provider(window.ethereum);
+                    await provider.send("eth_requestAccounts", []);
+                    signer = provider.getSigner();
+                    const address = await signer.getAddress();
+                    document.getElementById("walletAddress").textContent = address;
+                } catch (error) {
+                    console.error("Connection failed:", error);
+                }
+            } else {
+                alert("MetaMask is not installed!");
+            }
+        }
+
+        async function deployContract() {
+            try {
+                const response = await fetch("../../build/contracts/VerificationHealthRecords.json");
+                const source = await response.json();
+
+                if (!provider || !signer) {
+                    console.error("Provider or signer is not initialized.");
+                    return;
+                }
+
+                if (!source.abi || !source.bytecode) {
+                    console.error("Data ABI atau Bytecode tidak tersedia di file kontrak.");
+                    return;
+                }
+
+                const { abi, bytecode } = source;
+
+                // Ambil alamat akun dari signer
+                const deployerAddress = await signer.getAddress();
+                console.log("Mendeploy kontrak dari:", deployerAddress);
+
+                // Buat instance ContractFactory
+                const contractFactory = new ethers.ContractFactory(abi, bytecode, signer);
+
+                // Estimasi gas untuk deploy kontrak
+                console.log("Mengestimasi gas...");
+                const gasEstimate = await provider.estimateGas({ data: bytecode });
+
+                // Kirim transaksi deploy kontrak ke MetaMask
+                console.log("Meminta konfirmasi dari MetaMask...");
+                const contractInstance = await contractFactory.deploy({
+                    gasLimit: gasEstimate, // Gunakan gas estimasi
+                });
+
+                console.log("Transaksi terkirim, menunggu konfirmasi...");
+                console.log("Transaction Hash:", contractInstance.deployTransaction.hash);
+
+                // Tunggu hingga kontrak benar-benar terdeploy
+                await contractInstance.deployed();
+
+                console.log("Kontrak berhasil dideploy di:", contractInstance.address);
+
+                document.getElementById("contractAddress").textContent = contractInstance.address;
+                document.getElementById("txHashBC").textContent = contractInstance.deployTransaction.hash;
+
+                return contractInstance;
+            } catch (error) {
+                console.error("Gagal mendeply kontrak:", error);
+            }
+        }
+
+        async function sendBalances() {
+            if (!signer) {
+                alert("Please connect to MetaMask first!");
+                return;
+            }
+
+            const recipient = document.getElementById("recipient").value;
+            const balances = document.getElementById("balances").value; // Default empty data
+
+            if (!recipient) {
+                alert("Please enter a recipient address!");
+                return;
+            }
+
+            try {
+                console.log("Sending transaction to:", recipient);
+                const tx = await signer.sendTransaction({
+                    to: recipient,
+                    value: ethers.utils.parseEther(balances),
+                });
+
+                document.getElementById("txHash").textContent = tx.hash;
+                console.log("Transaction sent:", tx);
+            } catch (error) {
+                document.getElementById("txHash").textContent = "";
+                console.error("Transaction failed:", error);
+            }
+        }
+
+        async function sendTransactionData() {
+            if (!signer) {
+                alert("Please connect to MetaMask first!");
+                return;
+            }
+
+            const balances = document.getElementById("balances").value; // Default empty data
+
+            const dataTransaction = document.getElementById("transactionData").value;
+            // const gasPrice = await provider.getGasPrice();
+            try {
+                console.log("Sending transaction...");
+                const tx = await signer.sendTransaction({
+                    to: publicContractAddress,
+                    // <!-- 
+                    //     Konfigurasi gasLimit pada transaksi blockchain.
+                    //     Nilai gasLimit menentukan jumlah maksimum gas yang dapat digunakan untuk menjalankan transaksi atau kontrak pintar.
+                    //     Pada contoh ini, gasLimit diatur ke 1.000.000 untuk memastikan cukup sumber daya tersedia agar transaksi dapat diproses tanpa gagal akibat kekurangan gas.
+                    //     Pastikan nilai gasLimit disesuaikan dengan kompleksitas operasi yang akan dijalankan agar tidak terjadi pemborosan atau kegagalan transaksi.
+                    //  ->
+                    gasLimit: 1000000, // Set gas limit
+                    data: dataTransaction
+                });
+
+                console.log("Transaction sent:", tx);
+                document.getElementById("txDataHash").textContent = tx.hash;
+            } catch (error) {
+                document.getElementById("txDataHash").textContent = "";
+                console.error("Transaction failed:", error);
+            }
+        }
+
+
+        document.getElementById("connectWallet").addEventListener("click", connectMetaMask);
+        document.getElementById("sendBalances").addEventListener("click", sendBalances);
+        document.getElementById("sendTransactionData").addEventListener("click", sendTransactionData);
+        document.getElementById("deployContract").addEventListener("click", deployContract);
+    </script>
+
+</body>
+
+</html>

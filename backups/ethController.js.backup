@@ -1,0 +1,115 @@
+const catchAsync = require('../utils/catchAsync');
+const toolsUtil = require('../utils/toolsUtil');
+const AppError = require('../utils/appError');
+const fs = require('fs-extra');
+const solc = require('solc');
+const { Web3 } = require('web3');
+
+const web3 = new Web3(process.env.ETH_VERIFICATION_INFURA_URL);
+
+/**
+ * Fungsi: membuat contract
+ */
+exports.postTransaction = catchAsync(async (req, res, next) => {
+    // Validasi data yang
+    if (!toolsUtil.checkValidation(req)) {
+        return next(new AppError('Data yang dikirim tidak valid.', 400))
+    }
+
+    const account = web3.eth.accounts.privateKeyToAccount(req.body.private_key);
+    web3.eth.accounts.wallet.add(account);
+
+    // hiotung estimate gas dikenakan
+    const gasEstimate = await web3.eth.estimateGas({
+        from: account.address,
+        to: req.user.eth_address,
+        value: web3.utils.toWei(req.body.total_balance, 'ether'),
+    });
+
+    // Ambil saldo akun
+    const balance = await web3.eth.getBalance(account.address);
+
+    // Menghitung saldo dalam Ether
+    const balanceInEther = parseFloat(web3.utils.fromWei(balance, 'ether'));
+
+    // Menghitung total yang dibutuhkan (saldo + biaya gas) dalam ether
+    const totalRequired = parseFloat(req.body.total_balance) + (parseFloat(gasEstimate) * parseFloat(web3.utils.fromWei('10', 'gwei')));
+
+    // Pastikan saldo cukup untuk mengirimkan nilai dan biaya gas
+    if (balanceInEther < totalRequired) {
+        return next(new AppError("Saldo tidak cukup untuk melakukan transaksi", 400));
+    }
+
+    const tx = {
+        from: account.address,
+        to: req.user.eth_address,
+        value: web3.utils.toWei(req.body.total_balance, 'ether'),
+    };
+
+    const receipt = await web3.eth.sendTransaction(tx);
+    toolsUtil.success(res, 'Berhasil melakukan transaksi.', {
+        receipt_hash: receipt.transactionHash,
+    });
+});
+
+exports.addDataToEth = catchAsync(async (req, res, next) => {
+    // Validasi data yang
+    if (!toolsUtil.checkValidation(req)) {
+        return next(new AppError('Data yang dikirim tidak valid.', 400))
+    }
+
+    const source = JSON.parse(fs.readFileSync(process.env.CONTRACT_PATH, 'utf8'));
+    const abi = source.abi;
+    const contractAddress = "0x2FE54ac2356f1a9b4C487CA0f10c500C41dA6e9f";
+    const contract = new web3.eth.Contract(abi, contractAddress);
+
+    const tx = contract.methods.addData(req.body.data);
+    const gas = await tx.estimateGas({ from: req.user.eth_address });
+    const gasPrice = await web3.eth.getGasPrice();
+
+    const txData = {
+        from:  req.user.eth_address,
+        to: contractAddress,
+        gas,
+        gasPrice: gasPrice,
+        data: tx.encodeABI(),
+    };
+
+    const signedTx = await web3.eth.accounts.signTransaction(txData, req.user.ETH_STORAGE_KEY);
+    const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+
+    toolsUtil.success(res, 'Berhasil menambahkan data.', {
+        receipt_hash: receipt.transactionHash,
+    });
+});
+
+exports.getDataFromEth = catchAsync(async (req, res, next) => {
+    const source = JSON.parse(fs.readFileSync(process.env.CONTRACT_PATH, 'utf8'));
+    const abi = source.abi;
+    const contractAddress = "0x2FE54ac2356f1a9b4C487CA0f10c500C41dA6e9f";
+    const contract = new web3.eth.Contract(abi, contractAddress);
+
+    // web3.eth.getTransactionReceipt("0x7d44769a8c29607e3199430d0ef596f958353625987e32d22c62a1c98391f655")
+    //     .then(receipt => console.log(receipt.gasUsed))
+    //     .catch(console.error);
+
+    // Jika hasilnya "0x", berarti tidak ada kontrak di alamat itu.
+    web3.eth.getCode(contractAddress)
+        .then(console.log)
+        .catch(console.error);
+
+    // contract.methods.getDataCount().estimateGas()
+    //     .then(console.log)
+    //     .catch(console.error);
+
+    const data = await contract.methods.getAllData().call();
+
+    const formattedData = data.map(entry => ({
+        id: entry.id.toString(),
+        data: entry.data.toString()
+    }));
+
+    toolsUtil.success(res, 'Berhasil mengambil data.', {
+        formattedData
+    });
+});

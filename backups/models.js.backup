@@ -1,0 +1,61 @@
+const { Sequelize, DataTypes } = require('sequelize');
+
+// Konfigurasi Sequelize menggunakan SQLite
+const sequelize = new Sequelize({
+  dialect: 'sqlite',
+  storage: './database.sqlite', // File database SQLite
+});
+
+// Definisikan model User
+const User = sequelize.define('User', {
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  email: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+  },
+  email: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+  },
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  address: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  privateKey: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+});
+
+// Definisikan model User
+const UserSmartContracts = sequelize.define('UserSmartContract', {
+  user_id: {
+    type: DataTypes.BIGINT,
+    allowNull: false,
+  },
+  bytecode: {
+    type: DataTypes.TEXT("long"),
+    allowNull: false,
+  },
+  privateKey: {
+    type: DataTypes.TEXT,
+    allowNull: false,
+  },
+});
+
+
+// Sinkronisasi database
+sequelize.sync()
+  .then(() => console.log('Database & tables telah dibuat!'))
+  .catch(err => console.error('Error membuat database:', err));
+
+module.exports = { sequelize, User };
